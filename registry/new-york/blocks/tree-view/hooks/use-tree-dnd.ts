@@ -6,6 +6,7 @@ import type {
   FlatTreeNode,
   DropPosition,
   TreeDragEvent,
+  MaybePromise,
 } from "../lib/tree-types";
 import {
   getDescendantIds,
@@ -27,9 +28,9 @@ export interface UseTreeDndOptions<T extends TreeNodeData> {
   indentationWidth: number;
   canDrag?: (node: FlatTreeNode<T>) => boolean;
   canDrop?: (event: TreeDragEvent<T>) => boolean;
-  onItemsChange?: (items: import("../lib/tree-types").TreeNodeNested<T>[]) => void;
-  onDragStart?: (event: TreeDragEvent<T>) => void;
-  onDragEnd?: (event: TreeDragEvent<T>) => void;
+  onItemsChange?: (items: import("../lib/tree-types").TreeNodeNested<T>[]) => MaybePromise<void>;
+  onDragStart?: (event: TreeDragEvent<T>) => MaybePromise<void>;
+  onDragEnd?: (event: TreeDragEvent<T>) => MaybePromise<void>;
   expandOnDragHover?: boolean;
   expandOnDragHoverDelay?: number;
   expand: (id: string) => void;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, useRef } from "react";
-import type { TreeNodeData, TreeNodeNested, FlatTreeNode } from "../lib/tree-types";
+import type { TreeNodeData, TreeNodeNested, FlatTreeNode, MaybePromise } from "../lib/tree-types";
 import {
   flattenTree,
   buildTree,
@@ -11,12 +11,12 @@ import {
 
 export interface UseTreeStateOptions<T extends TreeNodeData> {
   items: TreeNodeNested<T>[];
-  onItemsChange?: (items: TreeNodeNested<T>[]) => void;
+  onItemsChange?: (items: TreeNodeNested<T>[]) => MaybePromise<void>;
   selectionMode?: "none" | "single" | "multiple";
   selectedIds?: string[];
-  onSelectedIdsChange?: (ids: string[]) => void;
+  onSelectedIdsChange?: (ids: string[]) => MaybePromise<void>;
   expandedIds?: string[];
-  onExpandedIdsChange?: (ids: string[]) => void;
+  onExpandedIdsChange?: (ids: string[]) => MaybePromise<void>;
   defaultExpandAll?: boolean;
   defaultExpandedIds?: string[];
 }

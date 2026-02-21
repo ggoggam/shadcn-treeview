@@ -19,6 +19,7 @@ import type {
   TreeNodeRenderProps,
   LoadChildrenFn,
   DropPosition,
+  MaybePromise,
 } from "./lib/tree-types";
 import { TreeViewProvider } from "./lib/tree-context";
 import { useTreeState } from "./hooks/use-tree-state";
@@ -66,7 +67,7 @@ export interface TreeViewProps<T extends TreeNodeData = TreeNodeData>
   /** Tree data in nested format */
   items: TreeNodeNested<T>[];
   /** Called when tree structure changes (reorder, DND) */
-  onItemsChange?: (items: TreeNodeNested<T>[]) => void;
+  onItemsChange?: (items: TreeNodeNested<T>[]) => MaybePromise<void>;
   /** Unique ID for this tree instance (auto-generated if not provided) */
   treeId?: string;
   /** Render function for each tree node */
@@ -76,17 +77,17 @@ export interface TreeViewProps<T extends TreeNodeData = TreeNodeData>
   /** Async function to load children on expand */
   loadChildren?: LoadChildrenFn<T>;
   /** Error callback for lazy loading failures */
-  onLoadError?: (nodeId: string, error: Error) => void;
+  onLoadError?: (nodeId: string, error: Error) => MaybePromise<void>;
   /** Selection mode */
   selectionMode?: "none" | "single" | "multiple";
   /** Controlled selected IDs */
   selectedIds?: string[];
   /** Selection change callback */
-  onSelectedIdsChange?: (ids: string[]) => void;
+  onSelectedIdsChange?: (ids: string[]) => MaybePromise<void>;
   /** Controlled expanded IDs */
   expandedIds?: string[];
   /** Expansion change callback */
-  onExpandedIdsChange?: (ids: string[]) => void;
+  onExpandedIdsChange?: (ids: string[]) => MaybePromise<void>;
   /** Expand all by default */
   defaultExpandAll?: boolean;
   /** Specific IDs to expand by default */
@@ -112,8 +113,8 @@ export interface TreeViewProps<T extends TreeNodeData = TreeNodeData>
    */
   dndGroup?: string;
   /** DND event callbacks */
-  onDragStart?: (event: TreeDragEvent<T>) => void;
-  onDragEnd?: (event: TreeDragEvent<T>) => void;
+  onDragStart?: (event: TreeDragEvent<T>) => MaybePromise<void>;
+  onDragEnd?: (event: TreeDragEvent<T>) => MaybePromise<void>;
 }
 
 // ---------- TreeView Component ----------
@@ -546,4 +547,5 @@ export type {
   TreeNodeRenderProps,
   LoadChildrenFn,
   DropPosition,
+  MaybePromise,
 } from "./lib/tree-types";
