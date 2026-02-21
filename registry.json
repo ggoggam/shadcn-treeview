@@ -1,0 +1,56 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "acme",
+  "homepage": "https://acme.com",
+  "items": [
+    {
+      "name": "tree-view",
+      "type": "registry:component",
+      "title": "Tree View",
+      "description": "A generic, accessible tree view with recursive expand/collapse, lazy loading, and drag-and-drop support.",
+      "dependencies": ["@dnd-kit/react"],
+      "files": [
+        {
+          "path": "registry/new-york/blocks/tree-view/tree-view.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "registry/new-york/blocks/tree-view/components/tree-node.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "registry/new-york/blocks/tree-view/components/tree-drop-indicator.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "registry/new-york/blocks/tree-view/hooks/use-tree-state.ts",
+          "type": "registry:hook"
+        },
+        {
+          "path": "registry/new-york/blocks/tree-view/hooks/use-tree-keyboard.ts",
+          "type": "registry:hook"
+        },
+        {
+          "path": "registry/new-york/blocks/tree-view/hooks/use-tree-dnd.ts",
+          "type": "registry:hook"
+        },
+        {
+          "path": "registry/new-york/blocks/tree-view/hooks/use-tree-lazy.ts",
+          "type": "registry:hook"
+        },
+        {
+          "path": "registry/new-york/blocks/tree-view/lib/tree-types.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "registry/new-york/blocks/tree-view/lib/tree-utils.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "registry/new-york/blocks/tree-view/lib/tree-context.ts",
+          "type": "registry:lib"
+        }
+      ]
+    }
+  ]
+}

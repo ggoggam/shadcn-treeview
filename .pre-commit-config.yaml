@@ -1,0 +1,28 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-json
+      - id: check-toml
+      - id: check-yaml
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        exclude_types: [markdown]
+      - id: check-executables-have-shebangs
+  - repo: local
+    hooks:
+      - id: eslint
+        name: eslint
+        entry: bun run lint
+        language: system
+        pass_filenames: false
+        types_or: [javascript, jsx, ts, tsx]
+
+      - id: typecheck
+        name: typecheck
+        entry: bun tsc --noEmit
+        language: system
+        pass_filenames: false
+        types_or: [ts, tsx]

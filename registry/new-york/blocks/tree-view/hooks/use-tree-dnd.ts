@@ -1,0 +1,329 @@
+"use client";
+
+import { useState, useCallback, useRef } from "react";
+import type {
+  TreeNodeData,
+  FlatTreeNode,
+  DropPosition,
+  TreeDragEvent,
+} from "../lib/tree-types";
+import {
+  getDescendantIds,
+  getProjection,
+  removeNodes,
+  buildTree,
+} from "../lib/tree-utils";
+import type {
+  DragStartEvent,
+  DragOverEvent,
+  DragEndEvent,
+} from "@dnd-kit/react";
+
+export interface UseTreeDndOptions<T extends TreeNodeData> {
+  treeId: string;
+  flatNodes: FlatTreeNode<T>[];
+  visibleNodes: FlatTreeNode<T>[];
+  expandedIds: Set<string>;
+  indentationWidth: number;
+  canDrag?: (node: FlatTreeNode<T>) => boolean;
+  canDrop?: (event: TreeDragEvent<T>) => boolean;
+  onItemsChange?: (items: import("../lib/tree-types").TreeNodeNested<T>[]) => void;
+  onDragStart?: (event: TreeDragEvent<T>) => void;
+  onDragEnd?: (event: TreeDragEvent<T>) => void;
+  expandOnDragHover?: boolean;
+  expandOnDragHoverDelay?: number;
+  expand: (id: string) => void;
+}
+
+export interface UseTreeDndReturn {
+  activeId: string | null;
+  overId: string | null;
+  dropPosition: DropPosition | null;
+  projectedDepth: number | null;
+  projectedParentId: string | null;
+  handleDragStart: DragStartEvent;
+  handleDragOver: DragOverEvent;
+  handleDragEnd: DragEndEvent;
+}
+
+export function useTreeDnd<T extends TreeNodeData>(
+  options: UseTreeDndOptions<T>
+): UseTreeDndReturn {
+  const {
+    treeId,
+    flatNodes,
+    visibleNodes,
+    expandedIds,
+    indentationWidth,
+    canDrop,
+    onItemsChange,
+    onDragStart,
+    onDragEnd,
+    expandOnDragHover = true,
+    expandOnDragHoverDelay = 500,
+    expand,
+  } = options;
+
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
+  const [dropPosition, setDropPosition] = useState<DropPosition | null>(null);
+  const [projectedDepth, setProjectedDepth] = useState<number | null>(null);
+  const [projectedParentId, setProjectedParentId] = useState<string | null>(
+    null
+  );
+
+  // Refs to avoid stale closures in handleDragEnd — state updates from
+  // handleDragOver may not have committed by the time handleDragEnd fires.
+  const dropPositionRef = useRef<DropPosition | null>(null);
+  const projectedDepthRef = useRef<number | null>(null);
+  const projectedParentIdRef = useRef<string | null>(null);
+
+  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const hoverTargetRef = useRef<string | null>(null);
+  const offsetRef = useRef({ x: 0, y: 0 });
+
+  const handleDragStart: DragStartEvent = useCallback(
+    (event) => {
+      const source = event.operation.source;
+      if (!source) return;
+
+      const sourceNode = flatNodes.find((n) => n.id === source.id);
+      if (!sourceNode) return;
+
+      setActiveId(String(source.id));
+      offsetRef.current = { x: 0, y: 0 };
+
+      if (onDragStart && sourceNode) {
+        onDragStart({
+          source: sourceNode,
+          sourceTreeId: treeId,
+          target: sourceNode,
+          targetTreeId: treeId,
+          position: "before",
+          projectedDepth: sourceNode.depth,
+        });
+      }
+    },
+    [flatNodes, treeId, onDragStart]
+  );
+
+  const handleDragOver: DragOverEvent = useCallback(
+    (event) => {
+      const { source, target } = event.operation;
+      if (!source || !target) {
+        setOverId(null);
+        setDropPosition(null);
+        return;
+      }
+
+      const targetId = String(target.id);
+      setOverId(targetId);
+
+      // Track cumulative offset for depth projection
+      const transform = event.operation.transform;
+      if (transform) {
+        offsetRef.current = { x: transform.x, y: transform.y };
+      }
+
+      // Calculate projection
+      const projection = getProjection(
+        flatNodes,
+        visibleNodes,
+        String(source.id),
+        targetId,
+        offsetRef.current.x,
+        indentationWidth
+      );
+
+      setProjectedDepth(projection.depth);
+      setProjectedParentId(projection.parentId);
+      projectedDepthRef.current = projection.depth;
+      projectedParentIdRef.current = projection.parentId;
+
+      // Determine drop position
+      const targetNode = flatNodes.find((n) => n.id === targetId);
+      if (targetNode) {
+        // Check if the target is an expanded group with no visible children.
+        // In that case, hovering over it should always mean "inside" since
+        // there are no children to sort between. We also override the
+        // projected depth/parent so handleDragEnd places the node correctly.
+        const isExpandedEmptyGroup =
+          targetNode.isGroup &&
+          expandedIds.has(targetId) &&
+          !visibleNodes.some((n) => n.parentId === targetId);
+
+        const position: DropPosition =
+          targetNode.isGroup &&
+          (projection.parentId === targetId || isExpandedEmptyGroup)
+            ? "inside"
+            : "after";
+
+        if (isExpandedEmptyGroup && position === "inside") {
+          const correctedDepth = targetNode.depth + 1;
+          setProjectedDepth(correctedDepth);
+          setProjectedParentId(targetId);
+          projectedDepthRef.current = correctedDepth;
+          projectedParentIdRef.current = targetId;
+        }
+
+        setDropPosition(position);
+        dropPositionRef.current = position;
+      }
+
+      // Auto-expand on hover
+      if (expandOnDragHover && targetId !== hoverTargetRef.current) {
+        clearTimeout(hoverTimerRef.current);
+        hoverTargetRef.current = targetId;
+
+        const hoverNode = flatNodes.find((n) => n.id === targetId);
+        if (
+          hoverNode?.isGroup &&
+          !expandedIds.has(targetId) &&
+          targetId !== String(source.id)
+        ) {
+          hoverTimerRef.current = setTimeout(() => {
+            expand(targetId);
+          }, expandOnDragHoverDelay);
+        }
+      }
+    },
+    [
+      flatNodes,
+      visibleNodes,
+      indentationWidth,
+      expandedIds,
+      expandOnDragHover,
+      expandOnDragHoverDelay,
+      expand,
+    ]
+  );
+
+  const handleDragEnd: DragEndEvent = useCallback(
+    (event) => {
+      clearTimeout(hoverTimerRef.current);
+      hoverTargetRef.current = null;
+
+      const { source, target } = event.operation;
+      const canceled = event.canceled;
+
+      // Read from refs to avoid stale closures
+      const currentDropPosition = dropPositionRef.current;
+      const currentProjectedDepth = projectedDepthRef.current;
+      const currentProjectedParentId = projectedParentIdRef.current;
+
+      const resetState = () => {
+        setActiveId(null);
+        setOverId(null);
+        setDropPosition(null);
+        setProjectedDepth(null);
+        setProjectedParentId(null);
+        dropPositionRef.current = null;
+        projectedDepthRef.current = null;
+        projectedParentIdRef.current = null;
+      };
+
+      if (canceled || !source || !target) {
+        resetState();
+        return;
+      }
+
+      const sourceNode = flatNodes.find((n) => n.id === source.id);
+      const targetNode = flatNodes.find((n) => n.id === target.id);
+
+      if (!sourceNode || !targetNode) {
+        resetState();
+        return;
+      }
+
+      // Check canDrop
+      const dragEvent: TreeDragEvent<T> = {
+        source: sourceNode,
+        sourceTreeId: treeId,
+        target: targetNode,
+        targetTreeId: treeId,
+        position: currentDropPosition ?? "after",
+        projectedDepth: currentProjectedDepth ?? targetNode.depth,
+      };
+
+      if (canDrop && !canDrop(dragEvent)) {
+        resetState();
+        return;
+      }
+
+      // Perform the move
+      if (onItemsChange) {
+        // Get descendants of the dragged node
+        const descendantIds = getDescendantIds(flatNodes, sourceNode.id);
+        const draggedIds = new Set([sourceNode.id, ...descendantIds]);
+
+        // Collect dragged nodes
+        const draggedNodes = flatNodes.filter((n) => draggedIds.has(n.id));
+
+        // Remove dragged nodes from the tree
+        const remaining = removeNodes(flatNodes, [sourceNode.id]);
+
+        // Update depth and parentId for all dragged nodes
+        const depthDiff = (currentProjectedDepth ?? 0) - sourceNode.depth;
+        const updatedDragged = draggedNodes.map((n) => ({
+          ...n,
+          depth: n.depth + depthDiff,
+          parentId: n.id === sourceNode.id ? currentProjectedParentId : n.parentId,
+        }));
+
+        // Insert at the correct position
+        let insertAt = remaining.length;
+        const targetFlatIdx = remaining.findIndex(
+          (n) => n.id === target.id
+        );
+        if (targetFlatIdx >= 0) {
+          if (currentDropPosition === "inside") {
+            // Insert as first child of the target (right after the target node)
+            insertAt = targetFlatIdx + 1;
+          } else {
+            // "after" — insert after the target and all its descendants
+            let i = targetFlatIdx + 1;
+            while (
+              i < remaining.length &&
+              remaining[i].depth > remaining[targetFlatIdx].depth
+            ) {
+              i++;
+            }
+            insertAt = i;
+          }
+        }
+
+        const result = [
+          ...remaining.slice(0, insertAt),
+          ...updatedDragged,
+          ...remaining.slice(insertAt),
+        ];
+
+        onItemsChange(buildTree(result));
+      }
+
+      if (onDragEnd) {
+        onDragEnd(dragEvent);
+      }
+
+      resetState();
+    },
+    [
+      flatNodes,
+      treeId,
+      canDrop,
+      onItemsChange,
+      onDragEnd,
+    ]
+  );
+
+  return {
+    activeId,
+    overId,
+    dropPosition,
+    projectedDepth,
+    projectedParentId,
+    handleDragStart,
+    handleDragOver,
+    handleDragEnd,
+  };
+}
