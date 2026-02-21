@@ -61,6 +61,11 @@ export interface TreeDragEvent<T extends TreeNodeData = TreeNodeData> {
 /**
  * Callback for lazy loading children.
  */
+export type MaybePromise<T> = T | Promise<T>;
+
+/**
+ * Callback for lazy loading children.
+ */
 export type LoadChildrenFn<T extends TreeNodeData = TreeNodeData> = (
   node: FlatTreeNode<T>
 ) => Promise<TreeNodeNested<T>[]>;

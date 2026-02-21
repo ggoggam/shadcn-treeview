@@ -62,12 +62,12 @@ function MyTree() {
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
 | `items` | `TreeNodeNested<T>[]` | — | Tree data in nested format |
-| `onItemsChange` | `(items: TreeNodeNested<T>[]) => void` | — | Called when tree structure changes (reorder, DND) |
+| `onItemsChange` | `(items: TreeNodeNested<T>[]) => MaybePromise<void>` | — | Called when tree structure changes (reorder, DND). Supports async callbacks. |
 | `renderNode` | `(props: TreeNodeRenderProps<T>) => ReactNode` | — | Render function for each node |
 | `renderDragOverlay` | `(props: TreeNodeRenderProps<T>) => ReactNode` | — | Render function for the drag overlay |
 | `selectionMode` | `"none" \| "single" \| "multiple"` | `"single"` | Selection behavior |
-| `selectedIds` / `onSelectedIdsChange` | `string[]` / `(ids: string[]) => void` | — | Controlled selection |
-| `expandedIds` / `onExpandedIdsChange` | `string[]` / `(ids: string[]) => void` | — | Controlled expansion |
+| `selectedIds` / `onSelectedIdsChange` | `string[]` / `(ids: string[]) => MaybePromise<void>` | — | Controlled selection |
+| `expandedIds` / `onExpandedIdsChange` | `string[]` / `(ids: string[]) => MaybePromise<void>` | — | Controlled expansion |
 | `defaultExpandAll` | `boolean` | `false` | Expand all nodes initially |
 | `defaultExpandedIds` | `string[]` | — | Specific nodes to expand initially |
 | `draggable` | `boolean` | `false` | Enable drag |
@@ -75,7 +75,24 @@ function MyTree() {
 | `canDrag` | `(node: FlatTreeNode<T>) => boolean` | — | Per-node drag guard |
 | `canDrop` | `(event: TreeDragEvent<T>) => boolean` | — | Per-operation drop guard |
 | `loadChildren` | `(node: FlatTreeNode<T>) => Promise<TreeNodeNested<T>[]>` | — | Async loader for lazy children |
+| `onLoadError` | `(nodeId: string, error: Error) => MaybePromise<void>` | — | Error callback for lazy loading failures |
+| `onDragStart` | `(event: TreeDragEvent<T>) => MaybePromise<void>` | — | Called when a drag operation starts |
+| `onDragEnd` | `(event: TreeDragEvent<T>) => MaybePromise<void>` | — | Called when a drag operation ends |
 | `indentationWidth` | `number` | `20` | Pixels per indent level |
+
+All event callbacks (`onItemsChange`, `onSelectedIdsChange`, `onExpandedIdsChange`, `onDragStart`, `onDragEnd`, `onLoadError`) accept both sync and async functions via the `MaybePromise<void>` return type. This lets you call APIs directly from callbacks without wrapper boilerplate:
+
+```tsx
+<TreeView
+  items={items}
+  onItemsChange={async (items) => {
+    await fetch("/api/tree", { method: "PUT", body: JSON.stringify(items) });
+  }}
+  renderNode={...}
+/>
+```
+
+> **Note:** `canDrag` and `canDrop` remain synchronous (`=> boolean`) since they are evaluated during drag operations where an async round-trip would break the interaction.
 
 ## Cross-Tree Drag-and-Drop
 
@@ -110,7 +127,9 @@ Pass a `loadChildren` callback to load children on demand when a group node is e
     const children = await fetchChildren(node.id);
     return children; // TreeNodeNested<T>[]
   }}
-  onLoadError={(nodeId, error) => console.error(`Failed to load ${nodeId}`, error)}
+  onLoadError={async (nodeId, error) => {
+    await reportError({ nodeId, message: error.message });
+  }}
   renderNode={...}
 />
 ```

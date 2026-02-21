@@ -6,13 +6,14 @@ import type {
   TreeNodeNested,
   FlatTreeNode,
   LoadChildrenFn,
+  MaybePromise,
 } from "../lib/tree-types";
 
 export interface UseTreeLazyOptions<T extends TreeNodeData> {
   loadChildren?: LoadChildrenFn<T>;
   insertChildren: (parentId: string, children: TreeNodeNested<T>[]) => void;
   expand: (id: string) => void;
-  onLoadError?: (nodeId: string, error: Error) => void;
+  onLoadError?: (nodeId: string, error: Error) => MaybePromise<void>;
 }
 
 export interface UseTreeLazyReturn {
