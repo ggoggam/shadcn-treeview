@@ -1,6 +1,6 @@
-# TreeView for ShadCN
+# Tree View for ShadCN
 
-A generic, accessible TreeView component distributed as a [ShadCN registry](https://ui.shadcn.com/docs/registry) item. Built with React 19, TypeScript, and [@dnd-kit/react](https://dndkit.com/).
+A generic, accessible Tree View component distributed as a [ShadCN registry](https://ui.shadcn.com/docs/registry) item. Built with React 19, TypeScript, and [@dnd-kit/react](https://dndkit.com/).
 
 ## Features
 
@@ -17,7 +17,7 @@ A generic, accessible TreeView component distributed as a [ShadCN registry](http
 Add the component to your ShadCN project:
 
 ```bash
-npx shadcn@latest add https://YOUR_REGISTRY_URL/r/tree-view.json
+npx shadcn@latest add https://ggoggam.github.com/shadcn-treeview/r/tree-view.json
 ```
 
 ## Quick Start
