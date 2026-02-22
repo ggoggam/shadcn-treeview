@@ -4,9 +4,9 @@
   "homepage": "https://acme.com",
   "items": [
     {
-      "name": "tree-view",
+      "name": "treeview",
       "type": "registry:component",
-      "title": "Tree View",
+      "title": "TreeView",
       "description": "A generic, accessible tree view with recursive expand/collapse, lazy loading, and drag-and-drop support.",
       "dependencies": ["@dnd-kit/react"],
       "files": [
