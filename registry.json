@@ -4,7 +4,7 @@
   "homepage": "https://acme.com",
   "items": [
     {
-      "name": "treeview",
+      "name": "tree-view",
       "type": "registry:component",
       "title": "TreeView",
       "description": "A generic, accessible tree view with recursive expand/collapse, lazy loading, and drag-and-drop support.",
