@@ -45,6 +45,10 @@ jobs:
             --all-files \
             --hook-stage=manual
 
+      - name: Build registry
+        run: |
+          bun run registry:build
+
       - uses: stefanzweifel/git-auto-commit-action@v7
         if: ${{ ! cancelled() }}
         with:
