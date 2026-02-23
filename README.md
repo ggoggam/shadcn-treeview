@@ -129,6 +129,7 @@ When `selectionMode="multiple"` and you drag a node that is part of the current 
 | `onDragStart` | `(event: TreeDragEvent<T>) => MaybePromise<void>` | — | Called when a drag operation starts |
 | `onDragEnd` | `(event: TreeDragEvent<T>) => MaybePromise<void>` | — | Called when a drag operation ends |
 | `indentationWidth` | `number` | `20` | Pixels per indent level |
+| `showGuideLines` | `boolean` | `true` | Show vertical guide lines for nesting depth |
 
 All event callbacks (`onItemsChange`, `onSelectedIdsChange`, `onExpandedIdsChange`, `onDragStart`, `onDragEnd`, `onLoadError`) accept both sync and async functions via the `MaybePromise<void>` return type. This lets you call APIs directly from callbacks without wrapper boilerplate:
 
