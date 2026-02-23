@@ -5,12 +5,13 @@ A generic, accessible TreeView component distributed as a [ShadCN registry](http
 ## Features
 
 - **Recursive expand/collapse** with keyboard navigation (arrow keys, Home, End)
-- **Drag-and-drop** reordering within a single tree
+- **Single & multiple selection** — Ctrl/Cmd+Click to toggle, Shift+Click for range, Ctrl+A to select all
+- **Drag-and-drop** reordering within a single tree (multi-select DND moves all selected nodes)
 - **Cross-tree drag-and-drop** between multiple TreeView instances via `TreeViewDndContext`
 - **Lazy loading** of child nodes with async `loadChildren` callback
 - **Generic types** — bring your own node data shape with full type inference
 - **Controlled & uncontrolled** — manage expanded/selected state yourself or let the component handle it
-- **Accessible** — proper ARIA `tree`/`treeitem` roles, `aria-expanded`, `aria-selected`, keyboard support
+- **Accessible** — proper ARIA `tree`/`treeitem` roles, `aria-expanded`, `aria-selected`, `aria-multiselectable`, keyboard support
 
 ## Installation
 
@@ -57,6 +58,55 @@ function MyTree() {
 }
 ```
 
+## Selection
+
+Set `selectionMode` to control selection behavior:
+
+- `"none"` — no selection
+- `"single"` (default) — click selects one node at a time
+- `"multiple"` — full multiselect with modifier keys and keyboard support
+
+### Multiple Selection
+
+```tsx
+<TreeView<FileData>
+  items={items}
+  selectionMode="multiple"
+  renderNode={({ node, depth, toggle, select, hasChildren }) => (
+    <div style={{ paddingLeft: depth * 20 }} onClick={(e) => {
+      if (hasChildren) toggle();
+      select(e); // forwards modifier keys for multi-select
+    }}>
+      {node.data.name}
+    </div>
+  )}
+/>
+```
+
+Pass the mouse event to `select(e)` to enable modifier-key behavior. Without the event, `select()` always replaces the selection (single-select behavior).
+
+**Mouse interactions (multiple mode):**
+
+| Action | Behavior |
+|--------|----------|
+| Click | Select only this node |
+| Ctrl/Cmd+Click | Toggle this node in/out of selection |
+| Shift+Click | Select range from last selected to this node |
+
+**Keyboard interactions (multiple mode):**
+
+| Key | Behavior |
+|-----|----------|
+| Space | Toggle focused node in/out of selection |
+| Enter | Select only the focused node |
+| Shift+Arrow Up/Down | Extend selection range while moving focus |
+| Shift+Home/End | Select range from anchor to first/last node |
+| Ctrl/Cmd+A | Select all visible nodes |
+
+### Multi-Select Drag-and-Drop
+
+When `selectionMode="multiple"` and you drag a node that is part of the current selection, all selected nodes move together. Dragging an unselected node moves only that node.
+
 ## Props
 
 | Prop | Type | Default | Description |
@@ -65,7 +115,7 @@ function MyTree() {
 | `onItemsChange` | `(items: TreeNodeNested<T>[]) => MaybePromise<void>` | — | Called when tree structure changes (reorder, DND). Supports async callbacks. |
 | `renderNode` | `(props: TreeNodeRenderProps<T>) => ReactNode` | — | Render function for each node |
 | `renderDragOverlay` | `(props: TreeNodeRenderProps<T>) => ReactNode` | — | Render function for the drag overlay |
-| `selectionMode` | `"none" \| "single" \| "multiple"` | `"single"` | Selection behavior |
+| `selectionMode` | `"none" \| "single" \| "multiple"` | `"single"` | Selection behavior. Multiple enables Ctrl/Shift click, range select, and multi-node DND. |
 | `selectedIds` / `onSelectedIdsChange` | `string[]` / `(ids: string[]) => MaybePromise<void>` | — | Controlled selection |
 | `expandedIds` / `onExpandedIdsChange` | `string[]` / `(ids: string[]) => MaybePromise<void>` | — | Controlled expansion |
 | `defaultExpandAll` | `boolean` | `false` | Expand all nodes initially |

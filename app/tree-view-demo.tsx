@@ -49,22 +49,66 @@ const SUFFIX_CHARS = "abcdefghijklmnopqrstuvwxyz0123456789";
 
 function randomSuffix(len: number = 4): string {
   let s = "";
-  for (let i = 0; i < len; i++) s += SUFFIX_CHARS[Math.floor(rng() * SUFFIX_CHARS.length)];
+  for (let i = 0; i < len; i++)
+    s += SUFFIX_CHARS[Math.floor(rng() * SUFFIX_CHARS.length)];
   return s;
 }
 
 const FILE_NAMES = [
-  "index", "main", "app", "config", "utils", "helpers", "types",
-  "constants", "schema", "layout", "page", "routes", "middleware",
-  "context", "store", "actions", "reducer", "hooks", "service", "api",
+  "index",
+  "main",
+  "app",
+  "config",
+  "utils",
+  "helpers",
+  "types",
+  "constants",
+  "schema",
+  "layout",
+  "page",
+  "routes",
+  "middleware",
+  "context",
+  "store",
+  "actions",
+  "reducer",
+  "hooks",
+  "service",
+  "api",
 ];
 
-const FILE_EXTENSIONS = [".ts", ".tsx", ".js", ".css", ".json", ".md", ".yaml", ".env"];
+const FILE_EXTENSIONS = [
+  ".ts",
+  ".tsx",
+  ".js",
+  ".css",
+  ".json",
+  ".md",
+  ".yaml",
+  ".env",
+];
 
 const DIR_NAMES = [
-  "components", "hooks", "lib", "utils", "styles", "assets", "pages",
-  "api", "config", "models", "services", "types", "features", "modules",
-  "layouts", "shared", "common", "store", "middleware", "plugins",
+  "components",
+  "hooks",
+  "lib",
+  "utils",
+  "styles",
+  "assets",
+  "pages",
+  "api",
+  "config",
+  "models",
+  "services",
+  "types",
+  "features",
+  "modules",
+  "layouts",
+  "shared",
+  "common",
+  "store",
+  "middleware",
+  "plugins",
 ];
 
 function randomFileName(): string {
@@ -121,9 +165,7 @@ function createRandomFileTree(seed: number): TreeNodeNested<DemoItem>[] {
   return generateFileTree(0, "");
 }
 
-function collectGroupIds(
-  nodes: TreeNodeNested<DemoItem>[],
-): string[] {
+function collectGroupIds(nodes: TreeNodeNested<DemoItem>[]): string[] {
   const ids: string[] = [];
   for (const node of nodes) {
     if (node.isGroup) ids.push(node.id);
@@ -159,7 +201,7 @@ function renderTreeNode({
         if (hasChildren) {
           toggle();
         }
-        select();
+        select(e);
       }}
     >
       <span className="flex h-4 w-4 shrink-0 items-center justify-center">
@@ -269,7 +311,7 @@ function renderSimpleTreeNode({
         if (hasChildren) {
           toggle();
         }
-        select();
+        select(e);
       }}
     >
       <span className="flex h-4 w-4 shrink-0 items-center justify-center">
@@ -302,8 +344,24 @@ export function SimpleTreeDemo() {
       onItemsChange={setItems}
       renderNode={renderSimpleTreeNode}
       loadChildren={loadChildren}
-      selectionMode="single"
       aria-label="Simple tree with lazy loading"
+    />
+  );
+}
+
+export function SimpleTreeDemoWithMultiSelect() {
+  const [items, setItems] = useState(SIMPLE_TREE_DATA);
+
+  return (
+    <TreeView<DemoItem>
+      items={items}
+      onItemsChange={setItems}
+      loadChildren={loadChildren}
+      renderNode={renderSimpleTreeNode}
+      selectionMode="multiple"
+      draggable
+      droppable
+      aria-label="Simple tree with multi select"
     />
   );
 }
@@ -344,8 +402,10 @@ export function TreeViewDemo() {
 
       // Determine which state arrays correspond to source/target
       const getTreeState = (treeId: string) => {
-        if (treeId === "tree-a") return { items: itemsARef.current, setItems: setItemsA };
-        if (treeId === "tree-b") return { items: itemsBRef.current, setItems: setItemsB };
+        if (treeId === "tree-a")
+          return { items: itemsARef.current, setItems: setItemsA };
+        if (treeId === "tree-b")
+          return { items: itemsBRef.current, setItems: setItemsB };
         return null;
       };
 
@@ -369,17 +429,17 @@ export function TreeViewDemo() {
 
       // Update depth and parentId for all dragged nodes
       const depthDiff = (projectedDepth ?? 0) - sourceNode.depth;
-      const updatedDragged: FlatTreeNode<DemoItem>[] = draggedNodes.map((n) => ({
-        ...n,
-        depth: n.depth + depthDiff,
-        parentId:
-          n.id === sourceId ? (projectedParentId ?? null) : n.parentId,
-      }));
+      const updatedDragged: FlatTreeNode<DemoItem>[] = draggedNodes.map(
+        (n) => ({
+          ...n,
+          depth: n.depth + depthDiff,
+          parentId:
+            n.id === sourceId ? (projectedParentId ?? null) : n.parentId,
+        }),
+      );
 
       // Find insertion point in target flat array
-      const targetFlatIdx = targetFlatNodes.findIndex(
-        (n) => n.id === targetId,
-      );
+      const targetFlatIdx = targetFlatNodes.findIndex((n) => n.id === targetId);
       let insertAt = targetFlatNodes.length;
       if (targetFlatIdx >= 0) {
         if (dropPosition === "inside") {

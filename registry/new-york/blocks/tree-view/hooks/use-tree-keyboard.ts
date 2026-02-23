@@ -14,6 +14,8 @@ export interface UseTreeKeyboardOptions<T extends TreeNodeData> {
   collapse: (id: string) => void;
   select: (id: string) => void;
   toggleSelect: (id: string) => void;
+  selectRange: (id: string) => void;
+  selectAll: () => void;
   selectionMode: "none" | "single" | "multiple";
 }
 
@@ -39,6 +41,8 @@ export function useTreeKeyboard<T extends TreeNodeData>(
       collapse,
       select,
       toggleSelect,
+      selectRange,
+      selectAll,
       selectionMode,
     } = optionsRef.current;
 
@@ -57,14 +61,22 @@ export function useTreeKeyboard<T extends TreeNodeData>(
           currentIndex + 1,
           visibleNodes.length - 1
         );
-        setFocused(visibleNodes[nextIndex].id);
+        const nextId = visibleNodes[nextIndex].id;
+        setFocused(nextId);
+        if (e.shiftKey && selectionMode === "multiple") {
+          selectRange(nextId);
+        }
         break;
       }
 
       case "ArrowUp": {
         e.preventDefault();
         const prevIndex = Math.max(currentIndex - 1, 0);
-        setFocused(visibleNodes[prevIndex].id);
+        const prevId = visibleNodes[prevIndex].id;
+        setFocused(prevId);
+        if (e.shiftKey && selectionMode === "multiple") {
+          selectRange(prevId);
+        }
         break;
       }
 
@@ -103,7 +115,11 @@ export function useTreeKeyboard<T extends TreeNodeData>(
       case "Home": {
         e.preventDefault();
         if (visibleNodes.length > 0) {
-          setFocused(visibleNodes[0].id);
+          const firstId = visibleNodes[0].id;
+          setFocused(firstId);
+          if (e.shiftKey && selectionMode === "multiple") {
+            selectRange(firstId);
+          }
         }
         break;
       }
@@ -111,7 +127,11 @@ export function useTreeKeyboard<T extends TreeNodeData>(
       case "End": {
         e.preventDefault();
         if (visibleNodes.length > 0) {
-          setFocused(visibleNodes[visibleNodes.length - 1].id);
+          const lastId = visibleNodes[visibleNodes.length - 1].id;
+          setFocused(lastId);
+          if (e.shiftKey && selectionMode === "multiple") {
+            selectRange(lastId);
+          }
         }
         break;
       }
@@ -152,6 +172,17 @@ export function useTreeKeyboard<T extends TreeNodeData>(
       }
 
       default: {
+        // Ctrl/Cmd+A: select all visible nodes
+        if (
+          e.key === "a" &&
+          (e.ctrlKey || e.metaKey) &&
+          selectionMode === "multiple"
+        ) {
+          e.preventDefault();
+          selectAll();
+          break;
+        }
+
         // Type-ahead: single character
         if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
           e.preventDefault();

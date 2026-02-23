@@ -8,6 +8,7 @@ repos:
       - id: check-yaml
       - id: detect-private-key
       - id: end-of-file-fixer
+        exclude_types: [json]
       - id: trailing-whitespace
         exclude_types: [markdown]
       - id: check-executables-have-shebangs

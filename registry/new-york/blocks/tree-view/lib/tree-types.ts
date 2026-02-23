@@ -1,3 +1,5 @@
+import type React from "react";
+
 /**
  * Base constraint for user-provided tree node data.
  * Users extend this with their own properties.
@@ -84,6 +86,7 @@ export interface TreeNodeRenderProps<T extends TreeNodeData = TreeNodeData> {
   dropPosition: DropPosition | null;
   depth: number;
   hasChildren: boolean;
+  selectionMode: "none" | "single" | "multiple";
   toggle: () => void;
-  select: () => void;
+  select: (event?: React.MouseEvent) => void;
 }
