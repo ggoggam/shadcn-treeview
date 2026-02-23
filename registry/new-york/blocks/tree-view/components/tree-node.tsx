@@ -32,6 +32,7 @@ export function TreeNodeRow<T extends TreeNodeData = TreeNodeData>({
     projectedDepth,
     indentationWidth,
     selectionMode,
+    guideLineOffset,
     showGuideLines,
     draggable: isDraggableTree,
     canDrag,
@@ -70,7 +71,7 @@ export function TreeNodeRow<T extends TreeNodeData = TreeNodeData>({
       }
       select(node.id);
     },
-    [selectionMode, node.id, select, toggleSelect, selectRange]
+    [selectionMode, node.id, select, toggleSelect, selectRange],
   );
 
   const isDragDisabled = !isDraggableTree || (canDrag ? !canDrag(node) : false);
@@ -171,7 +172,7 @@ export function TreeNodeRow<T extends TreeNodeData = TreeNodeData>({
           aria-hidden
           data-slot="tree-guide-line"
           className="absolute top-0 bottom-0 w-px bg-border"
-          style={{ left: (d + 1) * indentationWidth }}
+          style={{ left: d * indentationWidth + guideLineOffset }}
         />
       ))}
       {renderNode({

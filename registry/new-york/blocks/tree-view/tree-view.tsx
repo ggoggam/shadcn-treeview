@@ -57,13 +57,17 @@ interface DndGroupContextValue {
  * null when not inside a TreeViewDndContext.
  */
 const TreeViewDndGroupContext = createContext<DndGroupContextValue | null>(
-  null
+  null,
 );
 
 // ---------- TreeView Props ----------
 
-export interface TreeViewProps<T extends TreeNodeData = TreeNodeData>
-  extends Omit<React.ComponentProps<"div">, "onChange" | "onDragStart" | "onDragEnd" | "onDragOver"> {
+export interface TreeViewProps<
+  T extends TreeNodeData = TreeNodeData,
+> extends Omit<
+  React.ComponentProps<"div">,
+  "onChange" | "onDragStart" | "onDragEnd" | "onDragOver"
+> {
   /** Tree data in nested format */
   items: TreeNodeNested<T>[];
   /** Called when tree structure changes (reorder, DND) */
@@ -106,6 +110,15 @@ export interface TreeViewProps<T extends TreeNodeData = TreeNodeData>
   expandOnDragHoverDelay?: number;
   /** Pixels per indent level */
   indentationWidth?: number;
+  /**
+   * Horizontal offset (in px) from the left edge of each indentation column
+   * to the guide line. The guide line for depth `d` is positioned at
+   * `d * indentationWidth + guideLineOffset`.
+   *
+   * Set this to match the center of your chevron/toggle element.
+   * Default: 16 (aligns with 8px base padding + center of a 16px icon container).
+   */
+  guideLineOffset?: number;
   /** Show vertical guide lines for nesting depth (default: true) */
   showGuideLines?: boolean;
   /**
@@ -143,6 +156,7 @@ export function TreeView<T extends TreeNodeData = TreeNodeData>({
   expandOnDragHover = true,
   expandOnDragHoverDelay = 500,
   indentationWidth = 20,
+  guideLineOffset = 16,
   showGuideLines = true,
   dndGroup: dndGroupProp,
   onDragStart,
@@ -206,14 +220,30 @@ export function TreeView<T extends TreeNodeData = TreeNodeData>({
     if (!dndGroupCtx || !(draggable || droppable)) return;
     const reg: DndGroupRegistration = {
       treeId,
-      get handleDragStart() { return dndHandlersRef.current.handleDragStart; },
-      get handleDragOver() { return dndHandlersRef.current.handleDragOver; },
-      get handleDragEnd() { return dndHandlersRef.current.handleDragEnd; },
-      get flatNodes() { return flatNodesRef.current as FlatTreeNode[]; },
-      get overId() { return dndHandlersRef.current.overId; },
-      get dropPosition() { return dndHandlersRef.current.dropPosition; },
-      get projectedDepth() { return dndHandlersRef.current.projectedDepth; },
-      get projectedParentId() { return dndHandlersRef.current.projectedParentId; },
+      get handleDragStart() {
+        return dndHandlersRef.current.handleDragStart;
+      },
+      get handleDragOver() {
+        return dndHandlersRef.current.handleDragOver;
+      },
+      get handleDragEnd() {
+        return dndHandlersRef.current.handleDragEnd;
+      },
+      get flatNodes() {
+        return flatNodesRef.current as FlatTreeNode[];
+      },
+      get overId() {
+        return dndHandlersRef.current.overId;
+      },
+      get dropPosition() {
+        return dndHandlersRef.current.dropPosition;
+      },
+      get projectedDepth() {
+        return dndHandlersRef.current.projectedDepth;
+      },
+      get projectedParentId() {
+        return dndHandlersRef.current.projectedParentId;
+      },
     };
     dndGroupCtx.register(reg);
     return () => dndGroupCtx.unregister(treeId);
@@ -229,7 +259,7 @@ export function TreeView<T extends TreeNodeData = TreeNodeData>({
         state.toggleExpand(id);
       }
     },
-    [state, lazy, loadChildren]
+    [state, lazy, loadChildren],
   );
 
   // Keyboard navigation
@@ -251,7 +281,7 @@ export function TreeView<T extends TreeNodeData = TreeNodeData>({
 
   // Active node for drag overlay
   const activeNode = dnd.activeId
-    ? state.flatNodes.find((n) => n.id === dnd.activeId) ?? null
+    ? (state.flatNodes.find((n) => n.id === dnd.activeId) ?? null)
     : null;
 
   // Context value
@@ -271,6 +301,7 @@ export function TreeView<T extends TreeNodeData = TreeNodeData>({
       projectedDepth: dnd.projectedDepth,
       indentationWidth,
       selectionMode,
+      guideLineOffset,
       showGuideLines,
       draggable,
       droppable,
@@ -298,6 +329,7 @@ export function TreeView<T extends TreeNodeData = TreeNodeData>({
       dnd.projectedDepth,
       indentationWidth,
       selectionMode,
+      guideLineOffset,
       showGuideLines,
       draggable,
       droppable,
@@ -309,7 +341,7 @@ export function TreeView<T extends TreeNodeData = TreeNodeData>({
       state.setFocused,
       renderNode,
       renderDragOverlay,
-    ]
+    ],
   );
 
   const treeContent = (
@@ -321,9 +353,7 @@ export function TreeView<T extends TreeNodeData = TreeNodeData>({
         aria-labelledby={divProps["aria-labelledby"]}
         aria-multiselectable={selectionMode === "multiple" || undefined}
         aria-activedescendant={
-          state.focusedId
-            ? `${treeId}-node-${state.focusedId}`
-            : undefined
+          state.focusedId ? `${treeId}-node-${state.focusedId}` : undefined
         }
         tabIndex={0}
         data-slot="tree-view"
@@ -331,11 +361,7 @@ export function TreeView<T extends TreeNodeData = TreeNodeData>({
         onKeyDown={keyboard.onKeyDown}
       >
         {state.visibleNodes.map((node, idx) => (
-          <TreeNodeRow<T>
-            key={node.id}
-            node={node}
-            sortableIndex={idx}
-          />
+          <TreeNodeRow<T> key={node.id} node={node} sortableIndex={idx} />
         ))}
       </div>
     </TreeViewProvider>
@@ -403,8 +429,12 @@ export interface CrossTreeDragInfo {
 
 export interface TreeViewDndContextProps {
   children: React.ReactNode;
-  onDragStart?: (event: { operation: { source: unknown; target: unknown } }) => void;
-  onDragOver?: (event: { operation: { source: unknown; target: unknown } }) => void;
+  onDragStart?: (event: {
+    operation: { source: unknown; target: unknown };
+  }) => void;
+  onDragOver?: (event: {
+    operation: { source: unknown; target: unknown };
+  }) => void;
   /**
    * Called when a drag ends. For cross-tree moves, a `crossTree` property
    * is attached with the target tree's projection (dropPosition, projectedDepth,
@@ -439,7 +469,7 @@ export function TreeViewDndContext({
         registrationsRef.current.delete(treeId);
       },
     }),
-    []
+    [],
   );
 
   // Find which registered tree owns a given node id
@@ -450,7 +480,7 @@ export function TreeViewDndContext({
       }
       return undefined;
     },
-    []
+    [],
   );
 
   const handleDragStart = useCallback(
@@ -464,7 +494,7 @@ export function TreeViewDndContext({
       }
       onDragStart?.(event);
     },
-    [findOwnerTree, onDragStart]
+    [findOwnerTree, onDragStart],
   );
 
   const lastOverTreeRef = useRef<string | null>(null);
@@ -477,7 +507,10 @@ export function TreeViewDndContext({
         const owner = findOwnerTree(String(targetId));
         if (owner) {
           // If target moved to a different tree, clear the previous tree's hover state
-          if (lastOverTreeRef.current && lastOverTreeRef.current !== owner.treeId) {
+          if (
+            lastOverTreeRef.current &&
+            lastOverTreeRef.current !== owner.treeId
+          ) {
             const prev = registrationsRef.current.get(lastOverTreeRef.current);
             if (prev) {
               // Send a synthetic event with no target to clear overId
@@ -493,7 +526,7 @@ export function TreeViewDndContext({
       }
       onDragOver?.(event);
     },
-    [findOwnerTree, onDragOver]
+    [findOwnerTree, onDragOver],
   );
 
   const handleDragEnd = useCallback(
@@ -506,7 +539,11 @@ export function TreeViewDndContext({
         const sourceTree = findOwnerTree(String(sourceId));
         const targetTree = findOwnerTree(String(targetId));
 
-        if (sourceTree && targetTree && sourceTree.treeId === targetTree.treeId) {
+        if (
+          sourceTree &&
+          targetTree &&
+          sourceTree.treeId === targetTree.treeId
+        ) {
           // Same-tree move — delegate to that tree's handler
           sourceTree.handleDragEnd(event);
         } else if (sourceTree && targetTree) {
@@ -538,7 +575,7 @@ export function TreeViewDndContext({
       lastOverTreeRef.current = null;
       onDragEnd?.(event);
     },
-    [findOwnerTree, onDragEnd]
+    [findOwnerTree, onDragEnd],
   );
 
   return (

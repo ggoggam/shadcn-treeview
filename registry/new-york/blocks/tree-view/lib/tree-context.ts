@@ -1,19 +1,13 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import type {
-  TreeNodeData,
-  FlatTreeNode,
-  DropPosition,
-} from "./tree-types";
+import type { TreeNodeData, FlatTreeNode, DropPosition } from "./tree-types";
 
 /**
  * Internal context for a single TreeView instance.
  * Shared between TreeView and its TreeNode children.
  */
-export interface TreeViewContextValue<
-  T extends TreeNodeData = TreeNodeData,
-> {
+export interface TreeViewContextValue<T extends TreeNodeData = TreeNodeData> {
   treeId: string;
   dndGroup: string;
   flatNodes: FlatTreeNode<T>[];
@@ -28,6 +22,7 @@ export interface TreeViewContextValue<
   projectedDepth: number | null;
   indentationWidth: number;
   selectionMode: "none" | "single" | "multiple";
+  guideLineOffset: number;
   showGuideLines: boolean;
   draggable: boolean;
   droppable: boolean;
@@ -37,8 +32,12 @@ export interface TreeViewContextValue<
   toggleSelect: (id: string) => void;
   selectRange: (id: string) => void;
   setFocused: (id: string | null) => void;
-  renderNode: (props: import("./tree-types").TreeNodeRenderProps<T>) => React.ReactNode;
-  renderDragOverlay?: (props: import("./tree-types").TreeNodeRenderProps<T>) => React.ReactNode;
+  renderNode: (
+    props: import("./tree-types").TreeNodeRenderProps<T>,
+  ) => React.ReactNode;
+  renderDragOverlay?: (
+    props: import("./tree-types").TreeNodeRenderProps<T>,
+  ) => React.ReactNode;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
