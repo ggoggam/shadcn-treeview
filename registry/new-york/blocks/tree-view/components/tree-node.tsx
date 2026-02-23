@@ -31,6 +31,7 @@ export function TreeNodeRow<T extends TreeNodeData = TreeNodeData>({
     dropPosition,
     projectedDepth,
     indentationWidth,
+    guideLineOffset,
     showGuideLines,
     draggable: isDraggableTree,
     canDrag,
@@ -151,7 +152,7 @@ export function TreeNodeRow<T extends TreeNodeData = TreeNodeData>({
           aria-hidden
           data-slot="tree-guide-line"
           className="absolute top-0 bottom-0 w-px bg-border"
-          style={{ left: (d + 1) * indentationWidth }}
+          style={{ left: d * indentationWidth + guideLineOffset }}
         />
       ))}
       {renderNode({
