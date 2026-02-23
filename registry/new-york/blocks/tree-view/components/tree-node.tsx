@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import { useSortable } from "@dnd-kit/react/sortable";
 import { cn } from "@/lib/utils";
 import { useTreeViewContext } from "../lib/tree-context";
@@ -31,10 +31,13 @@ export function TreeNodeRow<T extends TreeNodeData = TreeNodeData>({
     dropPosition,
     projectedDepth,
     indentationWidth,
+    selectionMode,
     draggable: isDraggableTree,
     canDrag,
     toggleExpand,
     select,
+    toggleSelect,
+    selectRange,
     renderNode,
   } = ctx;
 
@@ -51,6 +54,23 @@ export function TreeNodeRow<T extends TreeNodeData = TreeNodeData>({
     (node.childrenLoaded
       ? flatNodes.some((n) => n.parentId === node.id)
       : true);
+
+  const handleSelect = useCallback(
+    (event?: React.MouseEvent) => {
+      if (selectionMode === "multiple" && event) {
+        if (event.shiftKey) {
+          selectRange(node.id);
+          return;
+        }
+        if (event.metaKey || event.ctrlKey) {
+          toggleSelect(node.id);
+          return;
+        }
+      }
+      select(node.id);
+    },
+    [selectionMode, node.id, select, toggleSelect, selectRange]
+  );
 
   const isDragDisabled = !isDraggableTree || (canDrag ? !canDrag(node) : false);
 
@@ -164,8 +184,9 @@ export function TreeNodeRow<T extends TreeNodeData = TreeNodeData>({
         dropPosition: currentDropPosition,
         depth: node.depth,
         hasChildren,
+        selectionMode,
         toggle: () => toggleExpand(node.id),
-        select: () => select(node.id),
+        select: handleSelect,
       })}
       {isDropTargetNode && currentDropPosition === "after" && (
         <TreeDropIndicator

@@ -1,5 +1,9 @@
 import * as React from "react";
-import { SimpleTreeDemo, TreeViewDemo } from "./tree-view-demo";
+import {
+  SimpleTreeDemo,
+  SimpleTreeDemoWithMultiSelect,
+  TreeViewDemo,
+} from "./tree-view-demo";
 // This page displays items from the custom registry.
 // You are free to implement this with your own design as needed.
 
@@ -21,6 +25,14 @@ export default function Home() {
           </h2>
           <div className="relative p-4">
             <SimpleTreeDemo />
+          </div>
+        </div>
+        <div className="flex flex-col gap-4 border rounded-lg p-4 relative">
+          <h2 className="text-sm text-muted-foreground sm:pl-3">
+            Simple tree with multiselect.
+          </h2>
+          <div className="relative p-4">
+            <SimpleTreeDemoWithMultiSelect />
           </div>
         </div>
         <div className="flex flex-col gap-4 border rounded-lg p-4 min-h-[450px] relative">

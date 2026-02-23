@@ -32,6 +32,8 @@ export interface UseTreeStateReturn<T extends TreeNodeData> {
   collapse: (id: string) => void;
   select: (id: string) => void;
   toggleSelect: (id: string) => void;
+  selectRange: (id: string) => void;
+  selectAll: () => void;
   setFocused: (id: string | null) => void;
   setFlatNodes: (nodes: FlatTreeNode<T>[]) => void;
   insertChildren: (parentId: string, children: TreeNodeNested<T>[]) => void;
@@ -176,14 +178,14 @@ export function useTreeState<T extends TreeNodeData>(
     [flatNodes, setExpandedIds]
   );
 
+  // Anchor for Shift+Click range selection
+  const lastSelectedIdRef = useRef<string | null>(null);
+
   const select = useCallback(
     (id: string) => {
       if (selectionMode === "none") return;
-      if (selectionMode === "single") {
-        setSelectedIds(new Set([id]));
-      } else {
-        setSelectedIds(new Set([id]));
-      }
+      setSelectedIds(new Set([id]));
+      lastSelectedIdRef.current = id;
     },
     [selectionMode, setSelectedIds]
   );
@@ -206,9 +208,44 @@ export function useTreeState<T extends TreeNodeData>(
           return next;
         });
       }
+      lastSelectedIdRef.current = id;
     },
     [selectionMode, setSelectedIds]
   );
+
+  const selectRange = useCallback(
+    (id: string) => {
+      if (selectionMode !== "multiple") return;
+      const anchor = lastSelectedIdRef.current;
+      if (!anchor) {
+        // No anchor — treat as plain select
+        setSelectedIds(new Set([id]));
+        lastSelectedIdRef.current = id;
+        return;
+      }
+      const anchorIdx = visibleNodes.findIndex((n) => n.id === anchor);
+      const targetIdx = visibleNodes.findIndex((n) => n.id === id);
+      if (anchorIdx === -1 || targetIdx === -1) {
+        setSelectedIds(new Set([id]));
+        lastSelectedIdRef.current = id;
+        return;
+      }
+      const start = Math.min(anchorIdx, targetIdx);
+      const end = Math.max(anchorIdx, targetIdx);
+      const rangeIds = new Set<string>();
+      for (let i = start; i <= end; i++) {
+        rangeIds.add(visibleNodes[i].id);
+      }
+      setSelectedIds(rangeIds);
+      // Do NOT update lastSelectedIdRef — anchor stays for subsequent Shift+Clicks
+    },
+    [selectionMode, visibleNodes, setSelectedIds]
+  );
+
+  const selectAll = useCallback(() => {
+    if (selectionMode !== "multiple") return;
+    setSelectedIds(new Set(visibleNodes.map((n) => n.id)));
+  }, [selectionMode, visibleNodes, setSelectedIds]);
 
   // Mutation methods for DND and lazy loading
   const onItemsChangeRef = useRef(onItemsChange);
@@ -261,6 +298,8 @@ export function useTreeState<T extends TreeNodeData>(
     collapse,
     select,
     toggleSelect,
+    selectRange,
+    selectAll,
     setFocused,
     setFlatNodes,
     insertChildren,

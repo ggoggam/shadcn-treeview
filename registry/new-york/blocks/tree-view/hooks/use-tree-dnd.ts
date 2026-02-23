@@ -25,6 +25,8 @@ export interface UseTreeDndOptions<T extends TreeNodeData> {
   flatNodes: FlatTreeNode<T>[];
   visibleNodes: FlatTreeNode<T>[];
   expandedIds: Set<string>;
+  selectedIds: Set<string>;
+  selectionMode: "none" | "single" | "multiple";
   indentationWidth: number;
   canDrag?: (node: FlatTreeNode<T>) => boolean;
   canDrop?: (event: TreeDragEvent<T>) => boolean;
@@ -55,6 +57,8 @@ export function useTreeDnd<T extends TreeNodeData>(
     flatNodes,
     visibleNodes,
     expandedIds,
+    selectedIds,
+    selectionMode,
     indentationWidth,
     canDrop,
     onItemsChange,
@@ -253,23 +257,63 @@ export function useTreeDnd<T extends TreeNodeData>(
 
       // Perform the move
       if (onItemsChange) {
-        // Get descendants of the dragged node
-        const descendantIds = getDescendantIds(flatNodes, sourceNode.id);
-        const draggedIds = new Set([sourceNode.id, ...descendantIds]);
+        // Determine which root-level nodes to move. In multiple selection mode,
+        // if the dragged node is part of the selection, move all selected nodes.
+        // Filter out nodes whose ancestor is also selected (they move with their parent).
+        const movingMultiple =
+          selectionMode === "multiple" &&
+          selectedIds.has(sourceNode.id) &&
+          selectedIds.size > 1;
 
-        // Collect dragged nodes
-        const draggedNodes = flatNodes.filter((n) => draggedIds.has(n.id));
+        let rootIdsToMove: string[];
+        if (movingMultiple) {
+          // Build a set of all selected ids and their descendants
+          const allDescendants = new Set<string>();
+          for (const id of selectedIds) {
+            for (const d of getDescendantIds(flatNodes, id)) {
+              allDescendants.add(d);
+            }
+          }
+          // Root-level selected = selected but not a descendant of another selected node
+          rootIdsToMove = Array.from(selectedIds).filter(
+            (id) => !allDescendants.has(id)
+          );
+        } else {
+          rootIdsToMove = [sourceNode.id];
+        }
 
-        // Remove dragged nodes from the tree
-        const remaining = removeNodes(flatNodes, [sourceNode.id]);
+        // Collect all nodes to move (roots + their descendants), preserving flat order
+        const allIdsToMove = new Set<string>();
+        for (const rootId of rootIdsToMove) {
+          allIdsToMove.add(rootId);
+          for (const d of getDescendantIds(flatNodes, rootId)) {
+            allIdsToMove.add(d);
+          }
+        }
+        const draggedNodes = flatNodes.filter((n) => allIdsToMove.has(n.id));
 
-        // Update depth and parentId for all dragged nodes
+        // Remove all dragged nodes from the tree
+        const remaining = removeNodes(flatNodes, rootIdsToMove);
+
+        // For each root being moved, update depth/parentId relative to the source node.
+        // The source node goes to the projected position; other roots maintain their
+        // relative depth offsets from the source.
         const depthDiff = (currentProjectedDepth ?? 0) - sourceNode.depth;
-        const updatedDragged = draggedNodes.map((n) => ({
-          ...n,
-          depth: n.depth + depthDiff,
-          parentId: n.id === sourceNode.id ? currentProjectedParentId : n.parentId,
-        }));
+        const updatedDragged = draggedNodes.map((n) => {
+          if (rootIdsToMove.includes(n.id)) {
+            // Root node of a moved subtree
+            return {
+              ...n,
+              depth: n.depth + depthDiff,
+              parentId: currentProjectedParentId,
+            };
+          }
+          // Descendant — just shift depth
+          return {
+            ...n,
+            depth: n.depth + depthDiff,
+          };
+        });
 
         // Insert at the correct position
         let insertAt = remaining.length;
@@ -311,6 +355,8 @@ export function useTreeDnd<T extends TreeNodeData>(
     [
       flatNodes,
       treeId,
+      selectedIds,
+      selectionMode,
       canDrop,
       onItemsChange,
       onDragEnd,

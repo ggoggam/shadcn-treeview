@@ -27,11 +27,14 @@ export interface TreeViewContextValue<
   dropPosition: DropPosition | null;
   projectedDepth: number | null;
   indentationWidth: number;
+  selectionMode: "none" | "single" | "multiple";
   draggable: boolean;
   droppable: boolean;
   canDrag?: (node: FlatTreeNode<T>) => boolean;
   toggleExpand: (id: string) => void;
   select: (id: string) => void;
+  toggleSelect: (id: string) => void;
+  selectRange: (id: string) => void;
   setFocused: (id: string | null) => void;
   renderNode: (props: import("./tree-types").TreeNodeRenderProps<T>) => React.ReactNode;
   renderDragOverlay?: (props: import("./tree-types").TreeNodeRenderProps<T>) => React.ReactNode;
