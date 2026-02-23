@@ -107,6 +107,17 @@ export interface TreeViewProps<T extends TreeNodeData = TreeNodeData>
   /** Pixels per indent level */
   indentationWidth?: number;
   /**
+   * Horizontal offset (in px) from the left edge of each indentation column
+   * to the guide line. The guide line for depth `d` is positioned at
+   * `d * indentationWidth + guideLineOffset`.
+   *
+   * Set this to match the center of your chevron/toggle element.
+   * Default: 16 (aligns with 8px base padding + center of a 16px icon container).
+   */
+  guideLineOffset?: number;
+  /** Show vertical guide lines for nesting depth (default: true) */
+  showGuideLines?: boolean;
+  /**
    * Shared DND group identifier for cross-tree drag-and-drop.
    * Trees with the same dndGroup can exchange items.
    * Defaults to the tree's own treeId (no cross-tree).
@@ -141,6 +152,8 @@ export function TreeView<T extends TreeNodeData = TreeNodeData>({
   expandOnDragHover = true,
   expandOnDragHoverDelay = 500,
   indentationWidth = 20,
+  guideLineOffset = 16,
+  showGuideLines = true,
   dndGroup: dndGroupProp,
   onDragStart,
   onDragEnd,
@@ -263,6 +276,8 @@ export function TreeView<T extends TreeNodeData = TreeNodeData>({
       dropPosition: dnd.dropPosition,
       projectedDepth: dnd.projectedDepth,
       indentationWidth,
+      guideLineOffset,
+      showGuideLines,
       draggable,
       droppable,
       canDrag,
@@ -286,6 +301,8 @@ export function TreeView<T extends TreeNodeData = TreeNodeData>({
       dnd.dropPosition,
       dnd.projectedDepth,
       indentationWidth,
+      guideLineOffset,
+      showGuideLines,
       draggable,
       droppable,
       canDrag,

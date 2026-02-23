@@ -79,6 +79,8 @@ function MyTree() {
 | `onDragStart` | `(event: TreeDragEvent<T>) => MaybePromise<void>` | — | Called when a drag operation starts |
 | `onDragEnd` | `(event: TreeDragEvent<T>) => MaybePromise<void>` | — | Called when a drag operation ends |
 | `indentationWidth` | `number` | `20` | Pixels per indent level |
+| `guideLineOffset` | `number` | `16` | Horizontal offset (px) for guide lines. The guide line at depth `d` is placed at `d * indentationWidth + guideLineOffset`. Set this to match the center of your chevron element. |
+| `showGuideLines` | `boolean` | `true` | Show vertical guide lines for nesting depth |
 
 All event callbacks (`onItemsChange`, `onSelectedIdsChange`, `onExpandedIdsChange`, `onDragStart`, `onDragEnd`, `onLoadError`) accept both sync and async functions via the `MaybePromise<void>` return type. This lets you call APIs directly from callbacks without wrapper boilerplate:
 

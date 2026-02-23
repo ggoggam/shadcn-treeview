@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useSortable } from "@dnd-kit/react/sortable";
 import { cn } from "@/lib/utils";
 import { useTreeViewContext } from "../lib/tree-context";
@@ -20,6 +21,7 @@ export function TreeNodeRow<T extends TreeNodeData = TreeNodeData>({
     treeId,
     dndGroup,
     flatNodes,
+    visibleNodes,
     expandedIds,
     selectedIds,
     focusedId,
@@ -29,6 +31,8 @@ export function TreeNodeRow<T extends TreeNodeData = TreeNodeData>({
     dropPosition,
     projectedDepth,
     indentationWidth,
+    guideLineOffset,
+    showGuideLines,
     draggable: isDraggableTree,
     canDrag,
     toggleExpand,
@@ -50,18 +54,14 @@ export function TreeNodeRow<T extends TreeNodeData = TreeNodeData>({
       ? flatNodes.some((n) => n.parentId === node.id)
       : true);
 
-  const isDragDisabled =
-    !isDraggableTree || (canDrag ? !canDrag(node) : false);
+  const isDragDisabled = !isDraggableTree || (canDrag ? !canDrag(node) : false);
 
   // Count siblings for aria-setsize
   const siblingCount = flatNodes.filter(
-    (n) => n.parentId === node.parentId
+    (n) => n.parentId === node.parentId,
   ).length;
 
-  const {
-    ref,
-    isDragSource,
-  } = useSortable({
+  const { ref, isDragSource } = useSortable({
     id: node.id,
     index: sortableIndex,
     group: dndGroup,
@@ -76,6 +76,51 @@ export function TreeNodeRow<T extends TreeNodeData = TreeNodeData>({
   });
 
   const indicatorDepth = projectedDepth ?? node.depth;
+
+  // Compute which depth levels should show a vertical guide line.
+  // A line at level `d` means the ancestor subtree at that depth continues
+  // below this node (i.e., the ancestor has more siblings/children after).
+  const guideLines = useMemo(() => {
+    if (!showGuideLines || node.depth === 0) return [];
+
+    const lines: number[] = [];
+    // For each depth level from 0 to node.depth - 1, scan forward in
+    // visibleNodes to see if a node at that depth appears before a node at a
+    // shallower depth (which would close the subtree).
+    const continued = new Set<number>();
+    for (let i = sortableIndex + 1; i < visibleNodes.length; i++) {
+      const d = visibleNodes[i].depth;
+      if (d < node.depth) {
+        // We found a node shallower than current — mark this depth as
+        // continued (the ancestor at depth `d` has more siblings).
+        continued.add(d);
+        if (d === 0) break; // no deeper ancestors to check
+      }
+    }
+
+    for (let d = 0; d < node.depth; d++) {
+      if (continued.has(d)) lines.push(d);
+    }
+
+    // The immediate parent's line always shows if there is a subsequent
+    // sibling or cousin visible at the same depth or a node at parent depth.
+    // More accurately: the parent line shows if the current node is NOT the
+    // last child of its parent in the visible list.
+    const parentDepth = node.depth - 1;
+    if (!continued.has(parentDepth)) {
+      // Check if there's a subsequent sibling (same parentId)
+      for (let i = sortableIndex + 1; i < visibleNodes.length; i++) {
+        const n = visibleNodes[i];
+        if (n.depth <= parentDepth) break;
+        if (n.depth === node.depth && n.parentId === node.parentId) {
+          lines.push(parentDepth);
+          break;
+        }
+      }
+    }
+
+    return lines;
+  }, [showGuideLines, node.depth, node.parentId, sortableIndex, visibleNodes]);
 
   return (
     <div
@@ -96,9 +141,20 @@ export function TreeNodeRow<T extends TreeNodeData = TreeNodeData>({
       className={cn(
         "relative outline-none",
         isDragSource && "opacity-50",
-        isDropTargetNode && currentDropPosition === "inside" && "bg-accent/50 rounded-md",
+        isDropTargetNode &&
+          currentDropPosition === "inside" &&
+          "bg-accent/50 rounded-md",
       )}
     >
+      {guideLines.map((d) => (
+        <span
+          key={d}
+          aria-hidden
+          data-slot="tree-guide-line"
+          className="absolute top-0 bottom-0 w-px bg-border"
+          style={{ left: d * indentationWidth + guideLineOffset }}
+        />
+      ))}
       {renderNode({
         node,
         isExpanded,
