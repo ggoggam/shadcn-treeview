@@ -27,6 +27,7 @@ export interface TreeViewContextValue<
   dropPosition: DropPosition | null;
   projectedDepth: number | null;
   indentationWidth: number;
+  showGuideLines: boolean;
   draggable: boolean;
   droppable: boolean;
   canDrag?: (node: FlatTreeNode<T>) => boolean;

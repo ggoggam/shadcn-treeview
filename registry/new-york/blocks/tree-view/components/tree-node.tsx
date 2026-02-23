@@ -31,6 +31,7 @@ export function TreeNodeRow<T extends TreeNodeData = TreeNodeData>({
     dropPosition,
     projectedDepth,
     indentationWidth,
+    showGuideLines,
     draggable: isDraggableTree,
     canDrag,
     toggleExpand,
@@ -79,7 +80,7 @@ export function TreeNodeRow<T extends TreeNodeData = TreeNodeData>({
   // A line at level `d` means the ancestor subtree at that depth continues
   // below this node (i.e., the ancestor has more siblings/children after).
   const guideLines = useMemo(() => {
-    if (node.depth === 0) return [];
+    if (!showGuideLines || node.depth === 0) return [];
 
     const lines: number[] = [];
     // For each depth level from 0 to node.depth - 1, scan forward in
@@ -118,7 +119,7 @@ export function TreeNodeRow<T extends TreeNodeData = TreeNodeData>({
     }
 
     return lines;
-  }, [node.depth, node.parentId, sortableIndex, visibleNodes]);
+  }, [showGuideLines, node.depth, node.parentId, sortableIndex, visibleNodes]);
 
   return (
     <div

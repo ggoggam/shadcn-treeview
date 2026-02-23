@@ -106,6 +106,8 @@ export interface TreeViewProps<T extends TreeNodeData = TreeNodeData>
   expandOnDragHoverDelay?: number;
   /** Pixels per indent level */
   indentationWidth?: number;
+  /** Show vertical guide lines for nesting depth (default: true) */
+  showGuideLines?: boolean;
   /**
    * Shared DND group identifier for cross-tree drag-and-drop.
    * Trees with the same dndGroup can exchange items.
@@ -141,6 +143,7 @@ export function TreeView<T extends TreeNodeData = TreeNodeData>({
   expandOnDragHover = true,
   expandOnDragHoverDelay = 500,
   indentationWidth = 20,
+  showGuideLines = true,
   dndGroup: dndGroupProp,
   onDragStart,
   onDragEnd,
@@ -263,6 +266,7 @@ export function TreeView<T extends TreeNodeData = TreeNodeData>({
       dropPosition: dnd.dropPosition,
       projectedDepth: dnd.projectedDepth,
       indentationWidth,
+      showGuideLines,
       draggable,
       droppable,
       canDrag,
@@ -286,6 +290,7 @@ export function TreeView<T extends TreeNodeData = TreeNodeData>({
       dnd.dropPosition,
       dnd.projectedDepth,
       indentationWidth,
+      showGuideLines,
       draggable,
       droppable,
       canDrag,
