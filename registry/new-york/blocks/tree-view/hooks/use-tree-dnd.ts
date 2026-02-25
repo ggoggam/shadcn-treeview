@@ -140,6 +140,28 @@ export function useTreeDnd<T extends TreeNodeData>(
         indentationWidth
       );
 
+      // Prevent dropping a node into its own subtree.
+      // In multi-select mode, also check all selected nodes.
+      const sourceId = String(source.id);
+      const movingIds =
+        selectionMode === "multiple" && selectedIds.has(sourceId)
+          ? selectedIds
+          : new Set([sourceId]);
+      if (projection.parentId !== null) {
+        const allIdsToMove = new Set<string>();
+        for (const id of movingIds) {
+          allIdsToMove.add(id);
+          for (const d of getDescendantIds(flatNodes, id)) {
+            allIdsToMove.add(d);
+          }
+        }
+        if (allIdsToMove.has(projection.parentId)) {
+          setOverId(null);
+          setDropPosition(null);
+          return;
+        }
+      }
+
       setProjectedDepth(projection.depth);
       setProjectedParentId(projection.parentId);
       projectedDepthRef.current = projection.depth;
@@ -197,6 +219,8 @@ export function useTreeDnd<T extends TreeNodeData>(
       visibleNodes,
       indentationWidth,
       expandedIds,
+      selectedIds,
+      selectionMode,
       expandOnDragHover,
       expandOnDragHoverDelay,
       expand,
@@ -290,6 +314,16 @@ export function useTreeDnd<T extends TreeNodeData>(
             allIdsToMove.add(d);
           }
         }
+
+        // Prevent dropping a node into its own descendant (would create a cycle)
+        if (
+          currentProjectedParentId &&
+          allIdsToMove.has(currentProjectedParentId)
+        ) {
+          resetState();
+          return;
+        }
+
         const draggedNodes = flatNodes.filter((n) => allIdsToMove.has(n.id));
 
         // Remove all dragged nodes from the tree
