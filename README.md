@@ -18,7 +18,7 @@ A generic, accessible TreeView component distributed as a [ShadCN registry](http
 Add the component to your ShadCN project:
 
 ```bash
-npx shadcn@latest add https://ggoggam.github.com/shadcn-treeview/r/tree-view.json
+npx shadcn@latest add https://ggoggam.github.io/shadcn-treeview/r/tree-view.json
 ```
 
 ## Quick Start
