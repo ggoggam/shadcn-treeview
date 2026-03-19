@@ -1,4 +1,4 @@
-import type { TreeNodeData, TreeNodeNested, FlatTreeNode } from "./tree-types";
+import type { TreeNodeData, TreeNodeNested, FlatTreeNode } from "@/registry/new-york/blocks/tree-view/lib/tree-types";
 
 /**
  * Convert nested tree structure to flat array with parentId references.

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef } from "react";
-import type { TreeNodeData, FlatTreeNode } from "../lib/tree-types";
+import type { TreeNodeData, FlatTreeNode } from "@/registry/new-york/blocks/tree-view/lib/tree-types";
 
 export interface UseTreeKeyboardOptions<T extends TreeNodeData> {
   visibleNodes: FlatTreeNode<T>[];

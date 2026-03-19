@@ -7,13 +7,13 @@ import type {
   DropPosition,
   TreeDragEvent,
   MaybePromise,
-} from "../lib/tree-types";
+} from "@/registry/new-york/blocks/tree-view/lib/tree-types";
 import {
   getDescendantIds,
   getProjection,
   removeNodes,
   buildTree,
-} from "../lib/tree-utils";
+} from "@/registry/new-york/blocks/tree-view/lib/tree-utils";
 import type {
   DragStartEvent,
   DragOverEvent,

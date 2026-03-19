@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import type { TreeNodeData, FlatTreeNode, DropPosition } from "./tree-types";
+import type { TreeNodeData, FlatTreeNode, DropPosition } from "@/registry/new-york/blocks/tree-view/lib/tree-types";
 
 /**
  * Internal context for a single TreeView instance.
