@@ -7,7 +7,7 @@ import type {
   FlatTreeNode,
   LoadChildrenFn,
   MaybePromise,
-} from "../lib/tree-types";
+} from "@/registry/new-york/blocks/tree-view/lib/tree-types";
 
 export interface UseTreeLazyOptions<T extends TreeNodeData> {
   loadChildren?: LoadChildrenFn<T>;

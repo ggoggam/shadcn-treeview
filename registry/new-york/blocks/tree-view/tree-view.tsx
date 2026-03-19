@@ -20,14 +20,14 @@ import type {
   LoadChildrenFn,
   DropPosition,
   MaybePromise,
-} from "./lib/tree-types";
-import { TreeViewProvider } from "./lib/tree-context";
-import { useTreeState } from "./hooks/use-tree-state";
-import { useTreeKeyboard } from "./hooks/use-tree-keyboard";
-import { useTreeLazy } from "./hooks/use-tree-lazy";
-import { useTreeDnd } from "./hooks/use-tree-dnd";
-import { TreeNodeRow } from "./components/tree-node";
-import { TreeDropIndicator } from "./components/tree-drop-indicator";
+} from "@/registry/new-york/blocks/tree-view/lib/tree-types";
+import { TreeViewProvider } from "@/registry/new-york/blocks/tree-view/lib/tree-context";
+import { useTreeState } from "@/registry/new-york/blocks/tree-view/hooks/use-tree-state";
+import { useTreeKeyboard } from "@/registry/new-york/blocks/tree-view/hooks/use-tree-keyboard";
+import { useTreeLazy } from "@/registry/new-york/blocks/tree-view/hooks/use-tree-lazy";
+import { useTreeDnd } from "@/registry/new-york/blocks/tree-view/hooks/use-tree-dnd";
+import { TreeNodeRow } from "@/registry/new-york/blocks/tree-view/components/tree-node";
+import { TreeDropIndicator } from "@/registry/new-york/blocks/tree-view/components/tree-drop-indicator";
 
 // ---------- DND Group Context ----------
 
@@ -601,4 +601,4 @@ export type {
   LoadChildrenFn,
   DropPosition,
   MaybePromise,
-} from "./lib/tree-types";
+} from "@/registry/new-york/blocks/tree-view/lib/tree-types";

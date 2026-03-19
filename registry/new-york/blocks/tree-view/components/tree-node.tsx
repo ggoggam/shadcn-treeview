@@ -3,9 +3,9 @@
 import { useMemo, useCallback } from "react";
 import { useSortable } from "@dnd-kit/react/sortable";
 import { cn } from "@/lib/utils";
-import { useTreeViewContext } from "../lib/tree-context";
-import { TreeDropIndicator } from "./tree-drop-indicator";
-import type { TreeNodeData, FlatTreeNode } from "../lib/tree-types";
+import { useTreeViewContext } from "@/registry/new-york/blocks/tree-view/lib/tree-context";
+import { TreeDropIndicator } from "@/registry/new-york/blocks/tree-view/components/tree-drop-indicator";
+import type { TreeNodeData, FlatTreeNode } from "@/registry/new-york/blocks/tree-view/lib/tree-types";
 
 interface TreeNodeRowProps<T extends TreeNodeData = TreeNodeData> {
   node: FlatTreeNode<T>;

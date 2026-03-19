@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useMemo, useCallback, useRef } from "react";
-import type { TreeNodeData, TreeNodeNested, FlatTreeNode, MaybePromise } from "../lib/tree-types";
+import type { TreeNodeData, TreeNodeNested, FlatTreeNode, MaybePromise } from "@/registry/new-york/blocks/tree-view/lib/tree-types";
 import {
   flattenTree,
   buildTree,
   getVisibleNodes,
   getDescendantIds,
-} from "../lib/tree-utils";
+} from "@/registry/new-york/blocks/tree-view/lib/tree-utils";
 
 export interface UseTreeStateOptions<T extends TreeNodeData> {
   items: TreeNodeNested<T>[];
