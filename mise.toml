@@ -1,6 +1,10 @@
 [tools]
 bun = "latest"
 prek = "latest"
+# eslint is a node-shebang binary even when launched via `bun run`. Hosted ubuntu-latest
+# preinstalls Node 20+, but the self-hosted Railway runner only has an ancient system
+# node, so pin a modern one here.
+node = "lts"
 
 [tasks.install]
 description = "Install frontend dependencies"
