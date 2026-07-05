@@ -114,10 +114,23 @@ export function useTreeDnd<T extends TreeNodeData>(
 
   const handleDragOver: DragOverEvent = useCallback(
     (event) => {
-      const { source, target } = event.operation;
-      if (!source || !target) {
+      // Clear both React state and the refs handleDragEnd reads — clearing
+      // only the visuals would let the drop commit with a stale projection.
+      const clearProjection = () => {
         setOverId(null);
         setDropPosition(null);
+        setProjectedDepth(null);
+        setProjectedParentId(null);
+        dropPositionRef.current = null;
+        projectedDepthRef.current = null;
+        projectedParentIdRef.current = null;
+        clearTimeout(hoverTimerRef.current);
+        hoverTargetRef.current = null;
+      };
+
+      const { source, target } = event.operation;
+      if (!source || !target) {
+        clearProjection();
         return;
       }
 
@@ -140,26 +153,28 @@ export function useTreeDnd<T extends TreeNodeData>(
         indentationWidth
       );
 
-      // Prevent dropping a node into its own subtree.
+      // Prevent dropping a node into its own subtree, or onto the dragged
+      // subtree itself — handleDragEnd rejects both, so showing an indicator
+      // here would promise a drop that silently no-ops.
       // In multi-select mode, also check all selected nodes.
       const sourceId = String(source.id);
       const movingIds =
         selectionMode === "multiple" && selectedIds.has(sourceId)
           ? selectedIds
           : new Set([sourceId]);
-      if (projection.parentId !== null) {
-        const allIdsToMove = new Set<string>();
-        for (const id of movingIds) {
-          allIdsToMove.add(id);
-          for (const d of getDescendantIds(flatNodes, id)) {
-            allIdsToMove.add(d);
-          }
+      const allIdsToMove = new Set<string>();
+      for (const id of movingIds) {
+        allIdsToMove.add(id);
+        for (const d of getDescendantIds(flatNodes, id)) {
+          allIdsToMove.add(d);
         }
-        if (allIdsToMove.has(projection.parentId)) {
-          setOverId(null);
-          setDropPosition(null);
-          return;
-        }
+      }
+      if (
+        allIdsToMove.has(targetId) ||
+        (projection.parentId !== null && allIdsToMove.has(projection.parentId))
+      ) {
+        clearProjection();
+        return;
       }
 
       setProjectedDepth(projection.depth);
@@ -256,6 +271,13 @@ export function useTreeDnd<T extends TreeNodeData>(
         return;
       }
 
+      // No live projection — the last hover was cleared (e.g. over the
+      // dragged subtree itself), so the UI showed no drop target. No-op.
+      if (currentDropPosition === null) {
+        resetState();
+        return;
+      }
+
       const sourceNode = flatNodes.find((n) => n.id === source.id);
       const targetNode = flatNodes.find((n) => n.id === target.id);
 
@@ -270,7 +292,7 @@ export function useTreeDnd<T extends TreeNodeData>(
         sourceTreeId: treeId,
         target: targetNode,
         targetTreeId: treeId,
-        position: currentDropPosition ?? "after",
+        position: currentDropPosition,
         projectedDepth: currentProjectedDepth ?? targetNode.depth,
       };
 
@@ -313,6 +335,14 @@ export function useTreeDnd<T extends TreeNodeData>(
           for (const d of getDescendantIds(flatNodes, rootId)) {
             allIdsToMove.add(d);
           }
+        }
+
+        // Dropping onto the dragged subtree itself is a no-op — removing the
+        // subtree also removes the target, which would otherwise teleport the
+        // moved nodes to the end of the tree.
+        if (allIdsToMove.has(String(target.id))) {
+          resetState();
+          return;
         }
 
         // Prevent dropping a node into its own descendant (would create a cycle)

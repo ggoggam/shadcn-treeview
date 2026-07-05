@@ -85,21 +85,34 @@ export function useTreeState<T extends TreeNodeData>(
     }
   );
 
-  const expandedIds = controlledExpandedIds
-    ? new Set(controlledExpandedIds)
-    : internalExpandedIds;
+  const expandedIds = useMemo(
+    () =>
+      controlledExpandedIds ? new Set(controlledExpandedIds) : internalExpandedIds,
+    [controlledExpandedIds, internalExpandedIds]
+  );
+
+  // Chain same-tick updates through a ref: evaluating updaters against the
+  // render-time snapshot makes multiple calls in one tick last-write-wins
+  // (e.g. the * key expanding every sibling would only expand the last one).
+  // Only chain in uncontrolled mode — a controlled parent may reject a change
+  // without re-rendering, and an optimistically advanced ref would leak that
+  // phantom value into every later updater base.
+  const expandedIdsRef = useRef(expandedIds);
+  expandedIdsRef.current = expandedIds;
 
   const setExpandedIds = useCallback(
     (updater: Set<string> | ((prev: Set<string>) => Set<string>)) => {
-      const next = typeof updater === "function" ? updater(expandedIds) : updater;
+      const next =
+        typeof updater === "function" ? updater(expandedIdsRef.current) : updater;
       if (onExpandedIdsChange) {
         onExpandedIdsChange(Array.from(next));
       }
       if (!controlledExpandedIds) {
+        expandedIdsRef.current = next;
         setInternalExpandedIds(next);
       }
     },
-    [expandedIds, onExpandedIdsChange, controlledExpandedIds]
+    [onExpandedIdsChange, controlledExpandedIds]
   );
 
   // Selected state (controlled or uncontrolled)
@@ -107,21 +120,29 @@ export function useTreeState<T extends TreeNodeData>(
     new Set()
   );
 
-  const selectedIds = controlledSelectedIds
-    ? new Set(controlledSelectedIds)
-    : internalSelectedIds;
+  const selectedIds = useMemo(
+    () =>
+      controlledSelectedIds ? new Set(controlledSelectedIds) : internalSelectedIds,
+    [controlledSelectedIds, internalSelectedIds]
+  );
+
+  // Same uncontrolled-only chaining as expandedIdsRef above.
+  const selectedIdsRef = useRef(selectedIds);
+  selectedIdsRef.current = selectedIds;
 
   const setSelectedIds = useCallback(
     (updater: Set<string> | ((prev: Set<string>) => Set<string>)) => {
-      const next = typeof updater === "function" ? updater(selectedIds) : updater;
+      const next =
+        typeof updater === "function" ? updater(selectedIdsRef.current) : updater;
       if (onSelectedIdsChange) {
         onSelectedIdsChange(Array.from(next));
       }
       if (!controlledSelectedIds) {
+        selectedIdsRef.current = next;
         setInternalSelectedIds(next);
       }
     },
-    [selectedIds, onSelectedIdsChange, controlledSelectedIds]
+    [onSelectedIdsChange, controlledSelectedIds]
   );
 
   // Focused state
@@ -251,6 +272,13 @@ export function useTreeState<T extends TreeNodeData>(
   const onItemsChangeRef = useRef(onItemsChange);
   onItemsChangeRef.current = onItemsChange;
 
+  // Read items through a ref so callbacks captured by in-flight promises
+  // (lazy loads) operate on the latest tree, not a snapshot from when the
+  // load started. Two loads resolving between renders can still race — the
+  // airtight fix would be an updater-style onItemsChange.
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
+
   const setFlatNodes = useCallback(
     (nodes: FlatTreeNode<T>[]) => {
       if (onItemsChangeRef.current) {
@@ -281,10 +309,10 @@ export function useTreeState<T extends TreeNodeData>(
       }
 
       if (onItemsChangeRef.current) {
-        onItemsChangeRef.current(insertInto(items));
+        onItemsChangeRef.current(insertInto(itemsRef.current));
       }
     },
-    [items]
+    []
   );
 
   return {
