@@ -38,10 +38,7 @@ export function flattenTree<T extends TreeNodeData>(
 export function buildTree<T extends TreeNodeData>(
   flatNodes: FlatTreeNode<T>[]
 ): TreeNodeNested<T>[] {
-  const nodeMap = new Map<
-    string,
-    TreeNodeNested<T> & { _hasChildren: boolean }
-  >();
+  const nodeMap = new Map<string, TreeNodeNested<T>>();
   const roots: TreeNodeNested<T>[] = [];
 
   // Create all nodes first
@@ -51,24 +48,20 @@ export function buildTree<T extends TreeNodeData>(
       data: flat.data,
       isGroup: flat.isGroup || undefined,
       children: flat.childrenLoaded ? [] : undefined,
-      _hasChildren: false,
     });
   }
 
-  // Build parent-child relationships
+  // Build parent-child relationships. Link the map entries themselves —
+  // pushing copies would detach children created after the parent was
+  // emitted (parents with childrenLoaded:false get their array lazily).
   for (const flat of flatNodes) {
     const node = nodeMap.get(flat.id)!;
-    // Remove internal marker
-    const { _hasChildren: _, ...cleanNode } = node;
-
     if (flat.parentId === null) {
-      roots.push(cleanNode);
+      roots.push(node);
     } else {
       const parent = nodeMap.get(flat.parentId);
       if (parent) {
-        if (!parent.children) parent.children = [];
-        parent.children.push(cleanNode);
-        parent._hasChildren = true;
+        (parent.children ??= []).push(node);
       }
     }
   }
