@@ -26,7 +26,6 @@ export function TreeNodeRow<T extends TreeNodeData = TreeNodeData>({
     selectedIds,
     focusedId,
     loadingIds,
-    activeId,
     overId,
     dropPosition,
     projectedDepth,
@@ -47,7 +46,6 @@ export function TreeNodeRow<T extends TreeNodeData = TreeNodeData>({
   const isSelected = selectedIds.has(node.id);
   const isFocused = focusedId === node.id;
   const isLoading = loadingIds.has(node.id);
-  const isDragging = activeId === node.id;
   const isDropTargetNode = overId === node.id;
   const currentDropPosition = isDropTargetNode ? dropPosition : null;
 
