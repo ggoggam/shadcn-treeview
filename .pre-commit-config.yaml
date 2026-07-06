@@ -30,7 +30,9 @@ repos:
 
       - id: build-registry
         name: build registry
-        entry: mise run registry:build
+        # shadcn build's node process keeps its event loop alive on stdio it inherits from
+        # prek under `mise run`, so it never exits. Detach all stdio; surface output only on failure.
+        entry: bash -c 'log=$(mktemp); bun run registry:build </dev/null >"$log" 2>&1 || { cat "$log"; rm -f "$log"; exit 1; }; rm -f "$log"'
         language: system
         pass_filenames: false
         types_or: [javascript, jsx, ts, tsx]
