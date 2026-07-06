@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: jdx/mise-action@v3
+
+      - uses: actions/cache@v5
+        with:
+          path: |
+            ~/.bun/install/cache
+            ~/.cache/prek
+          key: ci-${{ runner.os }}-${{ hashFiles('bun.lock', '.pre-commit-config.yaml') }}
+          restore-keys: |
+            ci-${{ runner.os }}-
+
+      - name: Pre-commit
+        run: mise run pre-commit
+
+      - name: Test
+        run: mise run test

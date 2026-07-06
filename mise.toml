@@ -16,6 +16,11 @@ description = "Build component registry"
 depends = ["install"]
 run = "bun run registry:build"
 
+[tasks.test]
+description = "Run tests"
+depends = ["install"]
+run = "bun test"
+
 [tasks."pre-commit"]
 description = "Run pre-commit checks via prek"
 depends = ["install"]
