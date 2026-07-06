@@ -36,7 +36,6 @@ export function useTreeKeyboard<T extends TreeNodeData>(
       focusedId,
       expandedIds,
       setFocused,
-      toggleExpand,
       expand,
       collapse,
       select,

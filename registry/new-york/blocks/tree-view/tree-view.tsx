@@ -27,7 +27,6 @@ import { useTreeKeyboard } from "@/registry/new-york/blocks/tree-view/hooks/use-
 import { useTreeLazy } from "@/registry/new-york/blocks/tree-view/hooks/use-tree-lazy";
 import { useTreeDnd } from "@/registry/new-york/blocks/tree-view/hooks/use-tree-dnd";
 import { TreeNodeRow } from "@/registry/new-york/blocks/tree-view/components/tree-node";
-import { TreeDropIndicator } from "@/registry/new-york/blocks/tree-view/components/tree-drop-indicator";
 
 // ---------- DND Group Context ----------
 
